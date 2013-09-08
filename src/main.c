@@ -8,26 +8,15 @@
 
 #include "urls.h"
 
-static void parse_arguments( const int argc, char* const* argv );
-static void parse_file( const char* filename );
+static void  parse_arguments( const int argc, char* const* argv );
+static void  parse_file( const char* filename );
+static void* download_url( void* url );
+static FILE* get_output_file( const char* url );
 
 static const char* argument_list = "f:q";
 static char*       url_filename = NULL;
 static bool        quiet = false;
 static char**      remaining_arguments = NULL;
-
-
-static void* pull_one_url( void* url )
-{
-    CURL *curl;
-
-    curl = curl_easy_init();
-    curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_perform(curl); /* ignores error */ 
-    curl_easy_cleanup(curl);
- 
-    return NULL;
-}
 
 //
 // main
@@ -50,18 +39,12 @@ int main( int argc, char** argv )
     int x;
     for ( x = 0; x < url_count(); x++ )
     {
-        pthread_create( &tid[x], NULL, pull_one_url, (void*) url_get( x ) );
+        pthread_create( &tid[x], NULL, download_url, (void*) url_get( x ) );
     }
     for ( x = 0; x < url_count(); x++ )
     {
         pthread_join( tid[x], NULL );
     }
-
-    //int x;
-    //for ( x = 0; x < url_count(); x++ )
-    //{
-    //    printf( "%i: %s\n", x, url_get( x ) );
-    //}
 
     return 0;
 }
@@ -91,12 +74,6 @@ static void parse_arguments( const int argc, char* const* argv )
         }
     }
 
-    //int x;
-    //for ( x = 0; x < argc; x++ )
-    //{
-    //    printf( "argv[%i] = %s\n", x, argv[x] );
-    //}
-
     if ( optind < argc )
     {
         remaining_arguments = (char**) argv + optind;
@@ -107,8 +84,9 @@ static void parse_arguments( const int argc, char* const* argv )
     printf( "    quiet = %s\n", quiet ? "true" : "false" );
 
     // add the trailing urls
-    // (this works because getopt sorts the argument list to put the loose
-    // arguments at the end)
+    // (This only works properly with GNU getopt, because it sorts the argument
+    // list to put the loose arguments at the end.  BSD getopt does not do 
+    // this!)
     int i;
     for ( i = 0; i < argc - optind; i++ )
     {
@@ -137,4 +115,58 @@ static void parse_file( const char* filename )
         line[strlen( line ) - 1] = '\0'; // ensure last character is null
         url_add( line );
     }
+}
+
+//
+// download_url
+//
+// Download the data at the given URL.  This function is passed to 
+// pthread_create as the execution callback.
+//
+static void* download_url( void* url )
+{
+    CURL *curl;
+
+    curl = curl_easy_init();
+    curl_easy_setopt( curl, CURLOPT_URL, url );
+    curl_easy_setopt( curl, CURLOPT_WRITEDATA, get_output_file( (char*) url ) );
+    curl_easy_perform( curl ); /* ignores error */ 
+    curl_easy_cleanup( curl );
+ 
+    return NULL;
+}
+
+//
+// get_output_file
+//
+// Given the URL name, open and return file for writing.  The name of the opened
+// file is based off the URL:  from right to left, the longest string not
+// containing a '/' character.
+//
+static FILE* get_output_file( const char* url )
+{
+    // starting at the end, walk a pointer backwards until either a '/'
+    // character is encountered, or the beginning of the string is passed
+    int i = strlen( url ) - 1;
+    char* p = (char*) ( url + i );
+    while ( i >= 0 )
+    {
+        if ( *p == '/' )
+        {
+            break;
+        }
+        p--;
+        i--;
+    }
+    p++;
+
+    // then open a file for writing and return
+    FILE* f = fopen( p, "w" );
+    if ( f == NULL )
+    {
+        printf( "error opening %s\n", p );
+        exit( 1 );
+    }
+
+    return f;
 }
