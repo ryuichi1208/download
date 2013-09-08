@@ -24,8 +24,8 @@ void url_add( const char* url )
         capacity *= 2;
     }
 
-    list[count] = malloc( sizeof( char ) * strlen( url ) );
-    memcpy( list[count], url, strlen( url ) );
+    list[count] = malloc( sizeof( char ) * strlen( url ) + 1 );
+    memcpy( list[count], url, strlen( url ) + 1 );
     count++;
 }
 
