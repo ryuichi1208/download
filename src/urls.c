@@ -55,7 +55,7 @@ const char* url_get( const unsigned int i )
 //
 // Return the number of URLs stored in the list of URLs.
 //
-unsigned int  url_count()
+unsigned int url_count()
 {
     return count;
 }

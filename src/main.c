@@ -11,7 +11,9 @@
 static void  parse_arguments( const int argc, char* const* argv );
 static void  parse_file( const char* filename );
 static void* download_url( void* url );
-static FILE* get_output_file( const char* url );
+static char* get_output_filename( const char* url );
+static int   print_progress( void* clientp, double dltotal, double dlnow,
+                                            double ultotal, double ulnow );
 
 static const char* argument_list = "f:q";
 static char*       url_filename = NULL;
@@ -127,9 +129,20 @@ static void* download_url( void* url )
 {
     CURL *curl;
 
+    char* output_filename = get_output_filename( (char*) url );
+    FILE* output_file = fopen( output_filename, "w" );
+    if ( output_file == NULL )
+    {
+        printf( "error opening %s\n", output_filename );
+        exit( 1 );
+    }
+
     curl = curl_easy_init();
     curl_easy_setopt( curl, CURLOPT_URL, url );
-    curl_easy_setopt( curl, CURLOPT_WRITEDATA, get_output_file( (char*) url ) );
+    curl_easy_setopt( curl, CURLOPT_WRITEDATA, output_file );
+    curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, output_filename );
+    curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0 );
+    curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, print_progress );
     curl_easy_perform( curl ); /* ignores error */ 
     curl_easy_cleanup( curl );
  
@@ -137,13 +150,13 @@ static void* download_url( void* url )
 }
 
 //
-// get_output_file
+// get_output_filename
 //
-// Given the URL name, open and return file for writing.  The name of the opened
-// file is based off the URL:  from right to left, the longest string not
-// containing a '/' character.
+// Given the URL name, return the name of its associated output file for
+// writing.  The name is based off the URL:  from right to left, the longest
+// string not containing a '/' character.
 //
-static FILE* get_output_file( const char* url )
+static char* get_output_filename( const char* url )
 {
     // starting at the end, walk a pointer backwards until either a '/'
     // character is encountered, or the beginning of the string is passed
@@ -158,15 +171,17 @@ static FILE* get_output_file( const char* url )
         p--;
         i--;
     }
-    p++;
 
-    // then open a file for writing and return
-    FILE* f = fopen( p, "w" );
-    if ( f == NULL )
-    {
-        printf( "error opening %s\n", p );
-        exit( 1 );
-    }
+    return ++p;
+}
 
-    return f;
+//
+// print_progress
+//
+static int print_progress( void* clientp, double dltotal, double dlnow,
+                                          double ultotal, double ulnow )
+{
+    printf( "%s:\n", (char*) clientp );
+    printf( "    dltotal = %g, dlnow = %g\n", dltotal, dlnow );
+    return 0;
 }
