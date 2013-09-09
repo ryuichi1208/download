@@ -6,6 +6,7 @@
 #include <string.h>
 #include <curl/curl.h>
 
+#include "progress.h"
 #include "urls.h"
 
 static void  parse_arguments( const int argc, char* const* argv );
@@ -28,6 +29,8 @@ static char**      remaining_arguments = NULL;
 int main( int argc, char** argv )
 {
     url_init();
+    progress_init();
+
     parse_arguments( argc, (char* const*) argv );
 
     if ( url_filename != NULL )
@@ -137,6 +140,8 @@ static void* download_url( void* url )
         exit( 1 );
     }
 
+    progress_add( output_filename );
+
     curl = curl_easy_init();
     curl_easy_setopt( curl, CURLOPT_URL, url );
     curl_easy_setopt( curl, CURLOPT_WRITEDATA, output_file );
@@ -181,7 +186,7 @@ static char* get_output_filename( const char* url )
 static int print_progress( void* clientp, double dltotal, double dlnow,
                                           double ultotal, double ulnow )
 {
-    printf( "%s:\n", (char*) clientp );
-    printf( "    dltotal = %g, dlnow = %g\n", dltotal, dlnow );
+    progress_update( clientp, dltotal, dlnow );
+    progress_print();
     return 0;
 }
