@@ -6,6 +6,7 @@
 #include <string.h>
 #include <curl/curl.h>
 
+#include "output.h"
 #include "progress.h"
 #include "urls.h"
 
@@ -16,9 +17,9 @@ static char* get_output_filename( const char* url );
 static int   print_progress( void* clientp, double dltotal, double dlnow,
                                             double ultotal, double ulnow );
 
-static const char* argument_list = "f:q";
+static const char* argument_list = "f:p";
 static char*       url_filename = NULL;
-static bool        quiet = false;
+static bool        show_progress = false;
 static char**      remaining_arguments = NULL;
 
 //
@@ -32,6 +33,8 @@ int main( int argc, char** argv )
     progress_init();
 
     parse_arguments( argc, (char* const*) argv );
+
+    output_init( show_progress );
 
     if ( url_filename != NULL )
     {
@@ -51,6 +54,7 @@ int main( int argc, char** argv )
         pthread_join( tid[x], NULL );
     }
 
+    output_end();
     return 0;
 }
 
@@ -70,8 +74,8 @@ static void parse_arguments( const int argc, char* const* argv )
             case 'f':
                 url_filename = optarg;
                 break;
-            case 'q':
-                quiet = true;
+            case 'p':
+                show_progress = true;
                 break;
             default:
                 exit( 1 );
@@ -84,9 +88,9 @@ static void parse_arguments( const int argc, char* const* argv )
         remaining_arguments = (char**) argv + optind;
     }
 
-    printf( "arguments:\n" );
-    printf( "    url_filename = %s\n", url_filename );
-    printf( "    quiet = %s\n", quiet ? "true" : "false" );
+    output( "arguments:\n" );
+    output( "    url_filename = %s\n", url_filename );
+    output( "    show_progress = %s\n", show_progress ? "true" : "false" );
 
     // add the trailing urls
     // (This only works properly with GNU getopt, because it sorts the argument
@@ -95,7 +99,7 @@ static void parse_arguments( const int argc, char* const* argv )
     int i;
     for ( i = 0; i < argc - optind; i++ )
     {
-        printf( "    %s\n", remaining_arguments[i] );
+        output( "    %s\n", remaining_arguments[i] );
         url_add( remaining_arguments[i] );
     }
 }
@@ -110,7 +114,7 @@ static void parse_file( const char* filename )
     FILE* f = fopen( filename, "r" );
     if ( f == NULL )
     {
-        printf( "error opening %s\n", filename );
+        output( "error opening %s\n", filename );
         exit( 1 );
     }
 
@@ -136,7 +140,7 @@ static void* download_url( void* url )
     FILE* output_file = fopen( output_filename, "w" );
     if ( output_file == NULL )
     {
-        printf( "error opening %s\n", output_filename );
+        output( "error opening %s\n", output_filename );
         exit( 1 );
     }
 

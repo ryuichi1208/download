@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "output.h"
+
 #define ENTRIES_INITIAL_CAPACITY 10
 
 typedef struct
@@ -63,6 +65,6 @@ void progress_print()
     for ( x = 0; x < entries_count; x++ )
     {
         e = entries[x];
-        printf( "%s: %g/%g\n", e->name, e->now, e->total );
+        output( "%s: %g/%g\n", e->name, e->now, e->total );
     }
 }
