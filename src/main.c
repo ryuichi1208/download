@@ -187,6 +187,8 @@ static char* get_output_filename( const char* url )
 //
 // print_progress
 //
+// Progress function callback for curl.
+//
 static int print_progress( void* clientp, double dltotal, double dlnow,
                                           double ultotal, double ulnow )
 {
