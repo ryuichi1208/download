@@ -88,9 +88,9 @@ static void parse_arguments( const int argc, char* const* argv )
         remaining_arguments = (char**) argv + optind;
     }
 
-    output( "arguments:\n" );
-    output( "    url_filename = %s\n", url_filename );
-    output( "    show_progress = %s\n", show_progress ? "true" : "false" );
+    //output( "arguments:\n" );
+    //output( "    url_filename = %s\n", url_filename );
+    //output( "    show_progress = %s\n", show_progress ? "true" : "false" );
 
     // add the trailing urls
     // (This only works properly with GNU getopt, because it sorts the argument
@@ -99,7 +99,7 @@ static void parse_arguments( const int argc, char* const* argv )
     int i;
     for ( i = 0; i < argc - optind; i++ )
     {
-        output( "    %s\n", remaining_arguments[i] );
+        //output( "    %s\n", remaining_arguments[i] );
         url_add( remaining_arguments[i] );
     }
 }

@@ -1,8 +1,10 @@
 #include "progress.h"
 
+#include <ncurses.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <semaphore.h>
 
 #include "output.h"
 
@@ -19,6 +21,8 @@ static p_entry**    entries;
 static unsigned int entries_capacity;
 static unsigned int entries_count;
 
+static sem_t sem_progress;
+
 //
 // progress_init
 //
@@ -29,6 +33,8 @@ void progress_init()
     entries_capacity = ENTRIES_INITIAL_CAPACITY;
     entries_count = 0;
     entries = malloc( ENTRIES_INITIAL_CAPACITY * sizeof( p_entry* ) );
+
+    sem_init( &sem_progress, 0, 1 );
 }
 
 //
@@ -80,11 +86,18 @@ void progress_update( const char* name, const double total, const double now )
 //
 void progress_print()
 {
+    if ( !sem_trywait( &sem_progress ) ) return;
+
+    clear();
+
     int x;
     p_entry* e;
     for ( x = 0; x < entries_count; x++ )
     {
         e = entries[x];
-        output( "%s: %g/%g\n", e->name, e->now, e->total );
+        mvprintw( 0 + x, 0, "|%s|: |%g/%g|\n", e->name, e->now, e->total );
     }
+
+    refresh();
+    sem_post( &sem_progress );
 }
