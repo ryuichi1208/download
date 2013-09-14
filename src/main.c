@@ -14,8 +14,8 @@ static void  parse_arguments( const int argc, char* const* argv );
 static void  parse_file( const char* filename );
 static void* download_url( void* url );
 static char* get_output_filename( const char* url );
-static int   print_progress( void* clientp, double dltotal, double dlnow,
-                                            double ultotal, double ulnow );
+static int   update_progress( void* clientp, double dltotal, double dlnow,
+                                             double ultotal, double ulnow );
 
 static const char* argument_list = "f:p";
 static char*       url_filename = NULL;
@@ -151,7 +151,7 @@ static void* download_url( void* url )
     curl_easy_setopt( curl, CURLOPT_WRITEDATA, output_file );
     curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, output_filename );
     curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0 );
-    curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, print_progress );
+    curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, update_progress );
     curl_easy_perform( curl ); /* ignores error */ 
     curl_easy_cleanup( curl );
  
@@ -185,14 +185,14 @@ static char* get_output_filename( const char* url )
 }
 
 //
-// print_progress
+// update_progress
 //
 // Progress function callback for curl.
 //
-static int print_progress( void* clientp, double dltotal, double dlnow,
-                                          double ultotal, double ulnow )
+static int update_progress( void* clientp, double dltotal, double dlnow,
+                                           double ultotal, double ulnow )
 {
     progress_update( clientp, dltotal, dlnow );
-    progress_print();
+    output_print_progress();
     return 0;
 }

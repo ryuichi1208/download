@@ -4,24 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <semaphore.h>
 
 #include "output.h"
 
 #define ENTRIES_INITIAL_CAPACITY 10
 
-typedef struct
-{
-    char*  name;
-    double total;
-    double now;
-} p_entry;
-
 static p_entry**    entries;
 static unsigned int entries_capacity;
 static unsigned int entries_count;
-
-static sem_t sem_progress;
 
 //
 // progress_init
@@ -33,8 +23,6 @@ void progress_init()
     entries_capacity = ENTRIES_INITIAL_CAPACITY;
     entries_count = 0;
     entries = malloc( ENTRIES_INITIAL_CAPACITY * sizeof( p_entry* ) );
-
-    sem_init( &sem_progress, 0, 1 );
 }
 
 //
@@ -60,6 +48,26 @@ void progress_add( const char* name )
 }
 
 //
+// progress_get
+//
+// Return a pointer to the entry stored at index IDX.
+//
+p_entry* progress_get( const unsigned int idx )
+{
+    return entries[idx];
+}
+
+//
+// progress_count
+//
+// Return the number of entries in the progress list.
+//
+unsigned int progress_count()
+{
+    return entries_count;
+}
+
+//
 // progress_update
 //
 // Update the TOTAL and NOW values of the progress entry with name NAME.
@@ -77,27 +85,4 @@ void progress_update( const char* name, const double total, const double now )
             e->now = now;
         }
     }
-}
-
-//
-// progress_print
-//
-// Output the current progress status.
-//
-void progress_print()
-{
-    if ( !sem_trywait( &sem_progress ) ) return;
-
-    clear();
-
-    int x;
-    p_entry* e;
-    for ( x = 0; x < entries_count; x++ )
-    {
-        e = entries[x];
-        mvprintw( 0 + x, 0, "|%s|: |%g/%g|\n", e->name, e->now, e->total );
-    }
-
-    refresh();
-    sem_post( &sem_progress );
 }
