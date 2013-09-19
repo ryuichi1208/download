@@ -3,6 +3,7 @@
 #include <ncurses.h>
 #include <semaphore.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include "progress.h"
 
@@ -83,10 +84,47 @@ void output_print_progress()
 
     int x;
     p_entry* e;
+
+    // get max label length
+    int max_label_length = 0;
     for ( x = 0; x < progress_count(); x++ )
     {
         e = progress_get( x );
-        mvprintw( 0 + x, 0, "|%s|: |%g/%g|\n", e->name, e->now, e->total );
+        int length = strlen( e->name );
+
+        if ( max_label_length < length )
+        {
+            max_label_length = length;
+        }
+    }
+
+    // print the download progress for each entry
+    for ( x = 0; x < progress_count(); x++ )
+    {
+        e = progress_get( x );
+
+        // calculate the current download percentage and avoid NaN, as e->total
+        // is initially zero
+        double percentage;
+        if ( e->total > 0.0 )
+        {
+            percentage = e->now / e->total * 100.0;
+        }
+        else
+        {
+            percentage = 0.0;
+        }
+
+        mvprintw( 0 + x, 0, "%s", e->name );
+
+        // print extra spaces to align all the percentages
+        int i = strlen( e->name );
+        while ( i++ < max_label_length ) printw( " " );
+        printw( ":" );
+        if ( percentage < 100.0 ) printw( " " );
+        if ( percentage < 10.0  ) printw( " " );
+
+        printw( " %.2f%%\n", percentage );
     }
 
     refresh();
