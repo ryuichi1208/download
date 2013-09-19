@@ -16,8 +16,9 @@ static void* download_url( void* url );
 static char* get_output_filename( const char* url );
 static int   update_progress( void* clientp, double dltotal, double dlnow,
                                              double ultotal, double ulnow );
+static void  print_help();
 
-static const char* argument_list = "f:p";
+static const char* argument_list = "f:hp";
 static char*       url_filename = NULL;
 static bool        show_progress = false;
 static char**      remaining_arguments = NULL;
@@ -66,6 +67,13 @@ int main( int argc, char** argv )
 //
 static void parse_arguments( const int argc, char* const* argv )
 {
+    // if no arguments are specified, print the help message and exit
+    if ( argc == 1 )
+    {
+        print_help();
+        exit( 0 );
+    }
+
     int o;
     while ( ( o = getopt( argc, argv, argument_list ) ) != -1 )
     {
@@ -73,6 +81,10 @@ static void parse_arguments( const int argc, char* const* argv )
         {
             case 'f':
                 url_filename = optarg;
+                break;
+            case 'h':
+                print_help();
+                exit( 0 );
                 break;
             case 'p':
                 show_progress = true;
@@ -195,4 +207,17 @@ static int update_progress( void* clientp, double dltotal, double dlnow,
     progress_update( clientp, dltotal, dlnow );
     output_print_progress();
     return 0;
+}
+
+//
+// print_help
+//
+// Print a message explaining the program arguments and usage.
+//
+static void print_help()
+{
+    printf( "download [-hp] [-f <file>] [...]\n" );
+    printf( "    -h         | print this help message\n" );
+    printf( "    -p         | display progress during download\n" );
+    printf( "    -f <file>  | download the URLs listed in <file>\n" );
 }
