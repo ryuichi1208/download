@@ -55,6 +55,8 @@ void output_end()
 //
 void output( const char* format, ... )
 {
+    sem_wait( &sem_output );
+
     va_list arglist;
     va_start( arglist, format );
 
@@ -69,6 +71,8 @@ void output( const char* format, ... )
     }
 
     va_end( arglist );
+
+    sem_post( &sem_output );
 }
 
 //
