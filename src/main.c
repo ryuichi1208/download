@@ -210,14 +210,22 @@ static char* get_output_filename( const char* url )
     }
     p++;
 
-    int base_str_length = strlen( p );
-    int dir_str_length = strlen( download_dir );
+    char* filename;
+    if ( download_dir != NULL )
+    {
+        int base_str_length = strlen( p );
+        int dir_str_length = strlen( download_dir );
 
-    char* filename = malloc( base_str_length + dir_str_length + 1 + 1 );
-    strcpy( filename, download_dir );
-    strcat( filename, "/" ); // should check if this is necessary!
-    strcat( filename, p );
-    strcat( filename, "\0" );
+        filename = malloc( base_str_length + dir_str_length + 1 + 1 );
+        strcpy( filename, download_dir );
+        strcat( filename, "/" ); // should check if this is necessary!
+        strcat( filename, p );
+        strcat( filename, "\0" );
+    }
+    else
+    {
+        filename = p;
+    }
 
     return filename;
 }
