@@ -18,8 +18,9 @@ static int   update_progress( void* clientp, double dltotal, double dlnow,
                                              double ultotal, double ulnow );
 static void  print_help();
 
-static const char* argument_list = "f:hp";
+static const char* argument_list = "d:f:hp";
 static char*       url_filename = NULL;
+static char*       download_dir = NULL;
 static bool        show_progress = false;
 static char**      remaining_arguments = NULL;
 
@@ -79,6 +80,9 @@ static void parse_arguments( const int argc, char* const* argv )
     {
         switch( o )
         {
+            case 'd':
+                download_dir = optarg;
+                break;
             case 'f':
                 url_filename = optarg;
                 break;
@@ -101,6 +105,7 @@ static void parse_arguments( const int argc, char* const* argv )
     }
 
     //output( "arguments:\n" );
+    //output( "    download_dir = %s\n", download_dir );
     //output( "    url_filename = %s\n", url_filename );
     //output( "    show_progress = %s\n", show_progress ? "true" : "false" );
 
@@ -162,8 +167,13 @@ static void* download_url( void* url )
     curl_easy_setopt( curl, CURLOPT_URL, url );
     curl_easy_setopt( curl, CURLOPT_WRITEDATA, output_file );
     curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, output_filename );
-    curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0 );
-    curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, update_progress );
+
+    if ( show_progress )
+    {
+        curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0 );
+        curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, update_progress );
+    }
+
     curl_easy_perform( curl ); /* ignores error */ 
     curl_easy_cleanup( curl );
  
@@ -173,9 +183,10 @@ static void* download_url( void* url )
 //
 // get_output_filename
 //
-// Given the URL name, return the name of its associated output file for
+// Given the URL string, return the name of its associated output file for
 // writing.  The name is based off the URL:  from right to left, the longest
-// string not containing a '/' character.
+// string not containing a '/' character.  If specified, the download directory
+// is prepended to the filename.
 //
 static char* get_output_filename( const char* url )
 {
@@ -192,8 +203,18 @@ static char* get_output_filename( const char* url )
         p--;
         i--;
     }
+    p++;
 
-    return ++p;
+    int base_str_length = strlen( p );
+    int dir_str_length = strlen( download_dir );
+
+    char* filename = malloc( base_str_length + dir_str_length + 1 + 1 );
+    strcpy( filename, download_dir );
+    strcat( filename, "/" ); // should check if this is necessary!
+    strcat( filename, p );
+    strcat( filename, "\0" );
+
+    return filename;
 }
 
 //
@@ -216,8 +237,9 @@ static int update_progress( void* clientp, double dltotal, double dlnow,
 //
 static void print_help()
 {
-    printf( "download [-hp] [-f <file>] [...]\n" );
-    printf( "    -h         | print this help message\n" );
-    printf( "    -p         | display progress during download\n" );
-    printf( "    -f <file>  | download the URLs listed in <file>\n" );
+    printf( "download [-hp] [-d <directory>] [-f <file>] [...]\n" );
+    printf( "    -d <directory> | set a download directory for all files\n" );
+    printf( "    -h             | print this help message\n" );
+    printf( "    -p             | display progress during download\n" );
+    printf( "    -f <file>      | download the URLs listed in <file>\n" );
 }
