@@ -56,6 +56,11 @@ int main( int argc, char** argv )
         pthread_join( tid[x], NULL );
     }
 
+    if ( show_progress )
+    {
+        output( "Downloads finished successfully.  Press any key to exit." );
+    }
+
     output_end();
     return 0;
 }
