@@ -39,7 +39,7 @@ void progress_add( const char* name )
     }
 
     p_entry* e = malloc( sizeof( p_entry ) );
-    e->name = malloc( strlen( name ) * sizeof( char ) );
+    e->name = malloc( strlen( name ) * sizeof( char ) + 1 );
     strcpy( e->name, name );
     e->total = 0.0;
     e->now = 0.0;
