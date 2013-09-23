@@ -5,7 +5,7 @@
 #
 
 PROGRAM_NAME=download
-SHARED_LIBRARIES=-lcurl -lncurses
+SHARED_LIBRARIES=-lcurl -lncurses -lpthread
 
 # by default, compile and link the program
 default:
