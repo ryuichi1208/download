@@ -1,3 +1,3 @@
 #!/bin/bash
 
-gcc -Wall -o download -lcurl -lncurses $* src/*.c
+gcc -Wall -o download -lcurl -lncurses -lpthread $* src/*.c
