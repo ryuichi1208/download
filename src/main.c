@@ -251,7 +251,8 @@ static int update_progress( void* clientp, double dltotal, double dlnow,
 static void print_help()
 {
     printf( "download [-hp] [-d <directory>] [-f <file>] [...]\n" );
-    printf( "    -d <directory> | set a download directory for all files\n" );
+    //printf( "    -d <directory> | set a download directory for all files\n" );
+    printf( "    -d <directory> | save downloaded files into <directory>\n" );
     printf( "    -h             | print this help message\n" );
     printf( "    -p             | display progress during download\n" );
     printf( "    -f <file>      | download the URLs listed in <file>\n" );
