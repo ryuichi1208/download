@@ -19,6 +19,9 @@ curl -
 ncurses - 
 [http://www.gnu.org/software/ncurses/](http://www.gnu.org/software/ncurses/)
 
+The pthread library is also linked, but this should be available by default on
+most systems.
+
 Setup
 -----
 
@@ -43,13 +46,13 @@ A simple `Makefile` is provided to compile and link the download program by
 default.
 
     $ make
-    gcc -Wall -o download -lcurl -lncurses src/*.c
+    gcc -Wall -o download -lcurl -lncurses -lpthread src/*.c
 
 If `gdb` debugging is required, the debug target will build with the necessary
 options.
 
     $ make debug
-    gcc -Wall -g -o download -lcurl -lncurses src/*.c
+    gcc -Wall -g -o download -lcurl -lncurses -lpthread src/*.c
 
 Finally, the clean target will delete the program executable and its debug
 directory, if present.
