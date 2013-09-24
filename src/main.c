@@ -45,7 +45,13 @@ int main( int argc, char** argv )
     }
 
     pthread_t tid[url_count()];
-    curl_global_init( CURL_GLOBAL_ALL );
+
+    CURLcode result = curl_global_init( CURL_GLOBAL_ALL );
+    if ( result != 0 )
+    {
+        output( "curl_global_init error\n" );
+        exit( 1 );
+    }
 
     int x;
     for ( x = 0; x < url_count(); x++ )
@@ -180,7 +186,13 @@ static void* download_url( void* url )
         do_curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, update_progress );
     }
 
-    curl_easy_perform( curl ); /* ignores error */ 
+    CURLcode result = curl_easy_perform( curl );
+    if ( result != CURLE_OK )
+    {
+        output( "%s", curl_easy_strerror( result ) );
+        exit( result );
+    }
+
     curl_easy_cleanup( curl );
  
     return NULL;
