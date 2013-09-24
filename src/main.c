@@ -17,6 +17,7 @@ static char* get_output_filename( const char* url );
 static int   update_progress( void* clientp, double dltotal, double dlnow,
                                              double ultotal, double ulnow );
 static void  print_help();
+static void  do_curl_easy_setopt( CURL* curl, CURLoption option, void* p );
 
 static const char* argument_list = "d:f:hp";
 static char*       url_filename = NULL;
@@ -169,14 +170,14 @@ static void* download_url( void* url )
     progress_add( output_filename );
 
     curl = curl_easy_init();
-    curl_easy_setopt( curl, CURLOPT_URL, url );
-    curl_easy_setopt( curl, CURLOPT_WRITEDATA, output_file );
-    curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, output_filename );
+    do_curl_easy_setopt( curl, CURLOPT_URL, url );
+    do_curl_easy_setopt( curl, CURLOPT_WRITEDATA, output_file );
+    do_curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, output_filename );
 
     if ( show_progress )
     {
-        curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0 );
-        curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, update_progress );
+        do_curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0 );
+        do_curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, update_progress );
     }
 
     curl_easy_perform( curl ); /* ignores error */ 
@@ -256,4 +257,21 @@ static void print_help()
     printf( "    -h             | print this help message\n" );
     printf( "    -p             | display progress during download\n" );
     printf( "    -f <file>      | download the URLs listed in <file>\n" );
+}
+
+//
+// do_curl_easy_setopt
+//
+// Call curl_easy_setopt with the given arguments.  If there is an error,
+// print an error message and exit the program.
+//
+static void  do_curl_easy_setopt( CURL* curl, CURLoption option, void* p )
+{
+    CURLcode r = curl_easy_setopt( curl, option, p );
+
+    if ( r != CURLE_OK )
+    {
+        output( "%s\n", curl_easy_strerror( r ) );
+        exit( r );
+    }
 }
