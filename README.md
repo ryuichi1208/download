@@ -80,6 +80,7 @@ Supply the `-h` option to get a brief list of available arguments.
         -h             | print this help message
         -p             | display progress during download
         -f <file>      | download the URLs listed in <file>
+        -s             | disable SSL peer and host verification
 
 For example, to download two files into the `/tmp` directory, run the following 
 command:

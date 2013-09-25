@@ -19,10 +19,11 @@ static int   update_progress( void* clientp, double dltotal, double dlnow,
 static void  print_help();
 static void  do_curl_easy_setopt( CURL* curl, CURLoption option, void* p );
 
-static const char* argument_list = "d:f:hp";
+static const char* argument_list = "d:f:hps";
 static char*       url_filename = NULL;
 static char*       download_dir = NULL;
 static bool        show_progress = false;
+static bool        ssl_verify = true;
 static char**      remaining_arguments = NULL;
 
 //
@@ -105,6 +106,9 @@ static void parse_arguments( const int argc, char* const* argv )
             case 'p':
                 show_progress = true;
                 break;
+            case 's':
+                ssl_verify = false;
+                break;
             default:
                 exit( 1 );
                 break;
@@ -179,6 +183,12 @@ static void* download_url( void* url )
     do_curl_easy_setopt( curl, CURLOPT_URL, url );
     do_curl_easy_setopt( curl, CURLOPT_WRITEDATA, output_file );
     do_curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, output_filename );
+
+    if ( !ssl_verify )
+    {
+        do_curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0 );
+        do_curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 0 );
+    }
 
     if ( show_progress )
     {
@@ -264,11 +274,11 @@ static int update_progress( void* clientp, double dltotal, double dlnow,
 static void print_help()
 {
     printf( "download [-hp] [-d <directory>] [-f <file>] [...]\n" );
-    //printf( "    -d <directory> | set a download directory for all files\n" );
     printf( "    -d <directory> | save downloaded files into <directory>\n" );
     printf( "    -h             | print this help message\n" );
     printf( "    -p             | display progress during download\n" );
     printf( "    -f <file>      | download the URLs listed in <file>\n" );
+    printf( "    -s             | disable SSL peer and host verification\n" );
 }
 
 //
