@@ -27,9 +27,9 @@ void output_init( bool progress )
     {
         initscr();
         raw();
-        sem_init( &sem_output, 0, 1 );
     }
 
+    sem_init( &sem_output, 0, 1 );
 }
 
 //
