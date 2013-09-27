@@ -96,3 +96,8 @@ per line.  This can be combined with explicit URL arguments, for instance:
     $ download -f ~/files_to_download.txt google.com
 
 The `-p` option enables live progress output via ncurses.
+
+
+The `-s` option skips peer and host verification for SSL connections.  This can
+be useful when connecting to intranet sites with self-signed server
+certificates.
