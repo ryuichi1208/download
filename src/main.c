@@ -19,11 +19,12 @@ static int   update_progress( void* clientp, double dltotal, double dlnow,
 static void  print_help();
 static void  do_curl_easy_setopt( CURL* curl, CURLoption option, void* p );
 
-static const char* argument_list = "d:f:hps";
+static const char* argument_list = "d:f:hpst:";
 static char*       url_filename = NULL;
 static char*       download_dir = NULL;
 static bool        show_progress = false;
 static bool        ssl_verify = true;
+static int         max_threads = 0;
 static char**      remaining_arguments = NULL;
 
 //
@@ -45,8 +46,6 @@ int main( int argc, char** argv )
         parse_file( url_filename );
     }
 
-    pthread_t tid[url_count()];
-
     CURLcode result = curl_global_init( CURL_GLOBAL_ALL );
     if ( result != 0 )
     {
@@ -54,14 +53,25 @@ int main( int argc, char** argv )
         exit( 1 );
     }
 
-    int x;
-    for ( x = 0; x < url_count(); x++ )
+    if ( max_threads == 0 )
     {
-        pthread_create( &tid[x], NULL, download_url, (void*) url_get( x ) );
+        pthread_t tid[url_count()];
+
+        int x;
+        for ( x = 0; x < url_count(); x++ )
+        {
+            pthread_create( &tid[x], NULL, download_url, (void*) url_get( x ) );
+        }
+        for ( x = 0; x < url_count(); x++ )
+        {
+            pthread_join( tid[x], NULL );
+        }
     }
-    for ( x = 0; x < url_count(); x++ )
+    else
     {
-        pthread_join( tid[x], NULL );
+        int max = url_count() > max_threads ? max_threads : url_count();
+
+        pthread_t tid[max];
     }
 
     if ( show_progress )
@@ -109,10 +119,19 @@ static void parse_arguments( const int argc, char* const* argv )
             case 's':
                 ssl_verify = false;
                 break;
+            case 't':
+                max_threads = atoi( optarg );
+                break;
             default:
                 exit( 1 );
                 break;
         }
+    }
+
+    if ( max_threads < 0 )
+    {
+        printf( "must specify zero or more threads\n" );
+        exit( 1 );
     }
 
     if ( optind < argc )
