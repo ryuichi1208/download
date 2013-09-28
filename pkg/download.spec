@@ -7,8 +7,8 @@ URL:           github.com/mark-github/download
 License:       Artistic
 Source0:       download.tar.gz
 Prefix:        %{_prefix}/local/bin
-Requires:      curl-devel
-Requires:      ncurses-devel
+Requires:      libcurl
+Requires:      ncurses-libs
 BuildRequires: git
 BuildRequires: gcc
 BuildRequires: curl-devel
