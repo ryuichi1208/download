@@ -1,7 +1,10 @@
 #include "urls.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "output.h"
 
 #define LIST_INITIAL_CAPACITY 10
 
@@ -19,6 +22,12 @@ void url_init()
     count = 0;
     capacity = LIST_INITIAL_CAPACITY;
     list = malloc( LIST_INITIAL_CAPACITY * sizeof( char* ) );
+
+    if ( list == NULL )
+    {
+        printf( "error allocating URL list\n" );
+        exit( 1 );
+    }
 }
 
 //
@@ -28,14 +37,30 @@ void url_init()
 //
 void url_add( const char* url )
 {
+    if ( url == NULL ) return;
+
     // grow the URL list if necessary
     if ( count == capacity )
     {
         list = realloc( list, sizeof( char* ) * capacity * 2 );
+
+        if ( list == NULL )
+        {
+            output( "error reallocating URL list\n" );
+            exit( 1 );
+        }
+
         capacity *= 2;
     }
 
     list[count] = malloc( sizeof( char ) * strlen( url ) + 1 );
+
+    if ( list[count] == NULL )
+    {
+        output( "error allocating new URL\n" );
+        exit( 1 );
+    }
+
     memcpy( list[count], url, strlen( url ) + 1 );
     count++;
 }
@@ -47,6 +72,8 @@ void url_add( const char* url )
 //
 const char* url_get( const unsigned int i )
 {
+    if ( i >= count ) return NULL;
+
     return list[i];
 }
 
