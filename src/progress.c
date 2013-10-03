@@ -23,6 +23,12 @@ void progress_init()
     entries_capacity = ENTRIES_INITIAL_CAPACITY;
     entries_count = 0;
     entries = malloc( ENTRIES_INITIAL_CAPACITY * sizeof( p_entry* ) );
+
+    if ( entries == NULL )
+    {
+        printf( "error allocating the progress entries list\n" );
+        exit( 1 );
+    }
 }
 
 //
@@ -32,14 +38,37 @@ void progress_init()
 //
 void progress_add( const char* name )
 {
+    if ( name == NULL ) return;
+
     if ( entries_count == entries_capacity )
     {
         entries = realloc( entries, sizeof( char* ) * entries_capacity * 2 );
+
+        if ( entries == NULL )
+        {
+            output( "error reallocating the progress entries list\n" );
+            exit( 1 );
+        }
+
         entries_capacity *= 2;
     }
 
     p_entry* e = malloc( sizeof( p_entry ) );
+
+    if ( e == NULL )
+    {
+        output( "error allocating new progress entry\n" );
+        exit( 1 );
+    }
+
     e->name = malloc( strlen( name ) * sizeof( char ) + 1 );
+
+    if ( e->name == NULL )
+    {
+        output( "error allocating new progress entry name\n" );
+        exit( 1 );
+    }
+
     strcpy( e->name, name );
     e->total = 0.0;
     e->now = 0.0;
@@ -54,6 +83,8 @@ void progress_add( const char* name )
 //
 p_entry* progress_get( const unsigned int idx )
 {
+    if ( idx >= entries_count ) return NULL;
+
     return entries[idx];
 }
 
@@ -74,6 +105,10 @@ unsigned int progress_count()
 //
 void progress_update( const char* name, const double total, const double now )
 {
+    if ( name == NULL ) return;
+    if ( total < 0.0 ) return;
+    if ( now < 0.0 ) return;
+
     int x;
     p_entry* e;
     for ( x = 0; x < entries_count; x++ )
