@@ -199,7 +199,7 @@ static void* download_url( void* url )
     CURLcode result = curl_easy_perform( curl );
     if ( result != CURLE_OK )
     {
-        output( "%s", curl_easy_strerror( result ) );
+        output( "%s\n", curl_easy_strerror( result ) );
         exit( result );
     }
 
@@ -273,7 +273,7 @@ static int update_progress( void* clientp, double dltotal, double dlnow,
 //
 static void print_help()
 {
-    printf( "download [-hp] [-d <directory>] [-f <file>] [...]\n" );
+    printf( "download [-hps] [-d <directory>] [-f <file>] [...]\n" );
     printf( "    -d <directory> | save downloaded files into <directory>\n" );
     printf( "    -h             | print this help message\n" );
     printf( "    -p             | display progress during download\n" );
