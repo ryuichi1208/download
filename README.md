@@ -75,7 +75,7 @@ Running
 Supply the `-h` option to get a brief list of available arguments.
 
     $ download -h
-    download [-hp] [-d <directory>] [-f <file>] [...]
+    download [-hps] [-d <directory>] [-f <file>] [...]
         -d <directory> | save downloaded files into <directory>
         -h             | print this help message
         -p             | display progress during download
