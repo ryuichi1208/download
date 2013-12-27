@@ -47,7 +47,6 @@ int main( int argc, char** argv )
     }
 
     pthread_t tid[url_count()];
-    //bool done_list[url_count()];
 
     CURLcode result = curl_global_init( CURL_GLOBAL_ALL );
     if ( result != 0 )
@@ -59,25 +58,19 @@ int main( int argc, char** argv )
     int x;
     for ( x = 0; x < url_count(); x++ )
     {
-        //done_list[x] = false;
         pthread_create( &tid[x], NULL, download_url, (void*) url_get( x ) );
     }
-    /*for ( x = 0; x < url_count(); x++ )
-    {
-        pthread_join( tid[x], NULL );
-    }*/
 
     while ( true )
     {
-        output_print_progress();
+        if ( show_progress )
+        {
+            output_print_progress();
+        }
 
         bool all_done = true;
         for ( x = 0; x < url_count(); x++ )
         {
-            /*if ( done_list[x] == false )
-            {
-                all_done = false;
-            }*/
             p_entry* p = progress_get( x );
             if ( p == NULL || p->now < 0.1 || p->total - p->now > 0.01 )
             {
@@ -87,7 +80,13 @@ int main( int argc, char** argv )
         
         if ( all_done )
         {
-            output( "All done\n" );
+            output( "All downloads finished." );
+            if ( show_progress )
+            {
+                output( "  Press any key to continue." );
+            }
+            output( "\n" );
+
             output_end();
             exit( 0 );
         }
@@ -95,12 +94,6 @@ int main( int argc, char** argv )
         usleep( 50 * 1000 );
     }
 
-    /*if ( show_progress )
-    {
-        output( "Downloads finished successfully.  Press any key to exit." );
-    }
-
-    output_end();*/
     return 0;
 }
 
@@ -151,11 +144,6 @@ static void parse_arguments( const int argc, char* const* argv )
         remaining_arguments = (char**) argv + optind;
     }
 
-    //output( "arguments:\n" );
-    //output( "    download_dir = %s\n", download_dir );
-    //output( "    url_filename = %s\n", url_filename );
-    //output( "    show_progress = %s\n", show_progress ? "true" : "false" );
-
     // add the trailing urls
     // (This only works properly with GNU getopt, because it sorts the argument
     // list to put the loose arguments at the end.  BSD getopt does not do 
@@ -163,7 +151,6 @@ static void parse_arguments( const int argc, char* const* argv )
     int i;
     for ( i = 0; i < argc - optind; i++ )
     {
-        //output( "    %s\n", remaining_arguments[i] );
         url_add( remaining_arguments[i] );
     }
 }
@@ -198,7 +185,6 @@ static void parse_file( const char* filename )
 //
 static void* download_url( void* url )
 {
-    //pthread_cleanup_push( end_thread, url );
     CURL *curl;
 
     char* output_filename = get_output_filename( (char*) url );
@@ -215,17 +201,13 @@ static void* download_url( void* url )
     do_curl_easy_setopt( curl, CURLOPT_URL, url );
     do_curl_easy_setopt( curl, CURLOPT_WRITEDATA, output_file );
     do_curl_easy_setopt( curl, CURLOPT_PROGRESSDATA, output_filename );
+    do_curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0 );
+    do_curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, update_progress );
 
     if ( !ssl_verify )
     {
         do_curl_easy_setopt( curl, CURLOPT_SSL_VERIFYPEER, 0 );
         do_curl_easy_setopt( curl, CURLOPT_SSL_VERIFYHOST, 0 );
-    }
-
-    if ( show_progress )
-    {
-        do_curl_easy_setopt( curl, CURLOPT_NOPROGRESS, 0 );
-        do_curl_easy_setopt( curl, CURLOPT_PROGRESSFUNCTION, update_progress );
     }
 
     CURLcode result = curl_easy_perform( curl );
@@ -236,8 +218,6 @@ static void* download_url( void* url )
     }
 
     curl_easy_cleanup( curl );
-
-    //pthread_cleanup_pop( 1 );
  
     return NULL;
 }
@@ -296,7 +276,6 @@ static int update_progress( void* clientp, double dltotal, double dlnow,
                                            double ultotal, double ulnow )
 {
     progress_update( clientp, dltotal, dlnow );
-    //output_print_progress();
     return 0;
 }
 

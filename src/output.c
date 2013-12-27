@@ -1,7 +1,6 @@
 #include "output.h"
 
 #include <ncurses.h>
-//#include <semaphore.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -9,9 +8,6 @@
 
 // if true, use ncurses to show live download progress
 static bool show_progress;
-
-// semaphore to manage multi-thread text output
-//static sem_t sem_output;
 
 //
 // output_init
@@ -28,8 +24,6 @@ void output_init( bool progress )
         initscr();
         raw();
     }
-
-    //sem_init( &sem_output, 0, 1 );
 }
 
 //
@@ -43,7 +37,6 @@ void output_end()
     {
         getch();
         endwin();
-        //sem_destroy( &sem_output );
     }
 }
 
@@ -55,8 +48,6 @@ void output_end()
 //
 void output( const char* format, ... )
 {
-    //sem_wait( &sem_output );
-
     va_list arglist;
     va_start( arglist, format );
 
@@ -71,8 +62,6 @@ void output( const char* format, ... )
     }
 
     va_end( arglist );
-
-    //sem_post( &sem_output );
 }
 
 //
@@ -82,8 +71,6 @@ void output( const char* format, ... )
 // 
 void output_print_progress()
 {
-    //if ( !sem_trywait( &sem_output ) ) return;
-
     clear();
 
     int x;
@@ -132,5 +119,4 @@ void output_print_progress()
     }
 
     refresh();
-    //sem_post( &sem_output );
 }
