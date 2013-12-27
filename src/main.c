@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <curl/curl.h>
 
 #include "output.h"
@@ -46,6 +47,7 @@ int main( int argc, char** argv )
     }
 
     pthread_t tid[url_count()];
+    //bool done_list[url_count()];
 
     CURLcode result = curl_global_init( CURL_GLOBAL_ALL );
     if ( result != 0 )
@@ -57,19 +59,48 @@ int main( int argc, char** argv )
     int x;
     for ( x = 0; x < url_count(); x++ )
     {
+        //done_list[x] = false;
         pthread_create( &tid[x], NULL, download_url, (void*) url_get( x ) );
     }
-    for ( x = 0; x < url_count(); x++ )
+    /*for ( x = 0; x < url_count(); x++ )
     {
         pthread_join( tid[x], NULL );
+    }*/
+
+    while ( true )
+    {
+        output_print_progress();
+
+        bool all_done = true;
+        for ( x = 0; x < url_count(); x++ )
+        {
+            /*if ( done_list[x] == false )
+            {
+                all_done = false;
+            }*/
+            p_entry* p = progress_get( x );
+            if ( p == NULL || p->now < 0.1 || p->total - p->now > 0.01 )
+            {
+                all_done = false;
+            }
+        }
+        
+        if ( all_done )
+        {
+            output( "All done\n" );
+            output_end();
+            exit( 0 );
+        }
+
+        usleep( 50 * 1000 );
     }
 
-    if ( show_progress )
+    /*if ( show_progress )
     {
         output( "Downloads finished successfully.  Press any key to exit." );
     }
 
-    output_end();
+    output_end();*/
     return 0;
 }
 
@@ -167,6 +198,7 @@ static void parse_file( const char* filename )
 //
 static void* download_url( void* url )
 {
+    //pthread_cleanup_push( end_thread, url );
     CURL *curl;
 
     char* output_filename = get_output_filename( (char*) url );
@@ -204,6 +236,8 @@ static void* download_url( void* url )
     }
 
     curl_easy_cleanup( curl );
+
+    //pthread_cleanup_pop( 1 );
  
     return NULL;
 }
@@ -262,7 +296,7 @@ static int update_progress( void* clientp, double dltotal, double dlnow,
                                            double ultotal, double ulnow )
 {
     progress_update( clientp, dltotal, dlnow );
-    output_print_progress();
+    //output_print_progress();
     return 0;
 }
 
