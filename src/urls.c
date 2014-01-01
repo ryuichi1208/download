@@ -6,11 +6,11 @@
 
 #include "output.h"
 
-#define LIST_INITIAL_CAPACITY 10
+#define URLS_INITIAL_CAPACITY 10
 
-static unsigned int count;
-static unsigned int capacity;
-static char**       list;
+static char**       urls;
+static unsigned int urls_capacity;
+static unsigned int urls_count;
 
 //
 // url_init
@@ -19,11 +19,11 @@ static char**       list;
 //
 void url_init()
 {
-    count = 0;
-    capacity = LIST_INITIAL_CAPACITY;
-    list = malloc( LIST_INITIAL_CAPACITY * sizeof( char* ) );
+    urls_count = 0;
+    urls_capacity = URLS_INITIAL_CAPACITY;
+    urls = malloc( URLS_INITIAL_CAPACITY * sizeof( char* ) );
 
-    if ( list == NULL )
+    if ( urls == NULL )
     {
         printf( "error allocating URL list\n" );
         exit( 1 );
@@ -40,29 +40,29 @@ void url_add( const char* url )
     if ( url == NULL ) return;
 
     // grow the URL list if necessary
-    if ( count == capacity )
+    if ( urls_count == urls_capacity )
     {
-        list = realloc( list, sizeof( char* ) * capacity * 2 );
+        urls = realloc( urls, sizeof( char* ) * urls_capacity * 2 );
 
-        if ( list == NULL )
+        if ( urls == NULL )
         {
             output( "error reallocating URL list\n" );
             exit( 1 );
         }
 
-        capacity *= 2;
+        urls_capacity *= 2;
     }
 
-    list[count] = malloc( sizeof( char ) * strlen( url ) + 1 );
+    urls[urls_count] = malloc( ( strlen( url ) + 1 ) * sizeof( char ) );
 
-    if ( list[count] == NULL )
+    if ( urls[urls_count] == NULL )
     {
         output( "error allocating new URL\n" );
         exit( 1 );
     }
 
-    memcpy( list[count], url, strlen( url ) + 1 );
-    count++;
+    memcpy( urls[urls_count], url, strlen( url ) + 1 );
+    urls_count++;
 }
 
 //
@@ -72,9 +72,9 @@ void url_add( const char* url )
 //
 const char* url_get( const unsigned int i )
 {
-    if ( i >= count ) return NULL;
+    if ( i >= urls_count ) return NULL;
 
-    return list[i];
+    return urls[i];
 }
 
 //
@@ -84,5 +84,5 @@ const char* url_get( const unsigned int i )
 //
 unsigned int url_count()
 {
-    return count;
+    return urls_count;
 }

@@ -1,6 +1,7 @@
 #include "progress.h"
 
 #include <ncurses.h>
+#include <semaphore.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,6 +13,9 @@
 static p_entry**    entries;
 static unsigned int entries_capacity;
 static unsigned int entries_count;
+static sem_t        sem_progress;
+
+static void sort_progress_entries();
 
 //
 // progress_init
@@ -29,6 +33,8 @@ void progress_init()
         printf( "error allocating the progress entries list\n" );
         exit( 1 );
     }
+
+    sem_init( &sem_progress, 0, 1 );
 }
 
 //
@@ -39,6 +45,9 @@ void progress_init()
 void progress_add( const char* name )
 {
     if ( name == NULL ) return;
+
+    // wait for a semaphore since multiple threads may do this at once
+    sem_wait( &sem_progress );
 
     if ( entries_count == entries_capacity )
     {
@@ -61,7 +70,7 @@ void progress_add( const char* name )
         exit( 1 );
     }
 
-    e->name = malloc( strlen( name ) * sizeof( char ) + 1 );
+    e->name = malloc( ( strlen( name ) + 1 ) * sizeof( char ) );
 
     if ( e->name == NULL )
     {
@@ -74,6 +83,10 @@ void progress_add( const char* name )
     e->now = 0.0;
 
     entries[entries_count++] = e;
+
+    sort_progress_entries();
+
+    sem_post( &sem_progress );
 }
 
 //
@@ -118,6 +131,29 @@ void progress_update( const char* name, const double total, const double now )
         {
             e->total = total;
             e->now = now;
+        }
+    }
+}
+
+//
+// sort_progress_entries
+//
+// Sort the entries array alphabetically.
+//
+static void sort_progress_entries()
+{
+    int x, y;
+
+    for ( x = 0; x < entries_count; x++ )
+    {
+        for ( y = x + 1; y < entries_count; y++ )
+        {
+            if ( strcmp( entries[x]->name, entries[y]->name ) > 0 )
+            {
+                p_entry* tmp = entries[x];
+                entries[x] = entries[y];
+                entries[y] = tmp;
+            }
         }
     }
 }
