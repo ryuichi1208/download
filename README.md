@@ -28,7 +28,7 @@ Setup
 Start by cloning the git repository.  Once that completes, change to the project
 directory.
 
-    $ git clone https://github.com/mark-github/download.git
+    $ git clone https://github.com/reganm/download.git
     ...
     $ cd download
 
